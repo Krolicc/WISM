@@ -1,0 +1,81 @@
+{
+  "story_id": "story-001",
+  "title": "A space explorer and his mischievous alien pet discover a hidden garden on a desolate moon.",
+  "plot_points": [
+    {
+      "id": "pp-001",
+      "title": "The Discovery",
+      "description": "Captain Eva and her furry, six-legged companion, Pip, land on the barren moon of Xylos. While exploring, Pip darts away and disappears into a crevice.",
+      "frames": [
+        {
+          "id": "frame-001-01",
+          "panel": 1,
+          "description": "Wide shot of a sleek spaceship landed on a grey, cratered, desolate moonscape. A vast, starry nebula looms in the black sky. Captain Eva, in a white and orange spacesuit, stands at the bottom of the ramp, looking around.",
+          "dialogue": ""
+        },
+        {
+          "id": "frame-001-02",
+          "panel": 2,
+          "description": "Close up on Eva's shoulder, where Pip, a small, fluffy orange alien with big curious eyes, is perched. Pip chatters excitedly, pointing a tiny paw towards a rocky outcrop.",
+          "dialogue": "Pip: (Chitters inquisitively!)"
+        },
+        {
+          "id": "frame-001-03",
+          "panel": 3,
+          "description": "Action shot. Pip suddenly leaps from Eva's shoulder and sprints across the grey dust towards a dark, narrow crevice in the rocks. Eva yells after him, surprised.",
+          "dialogue": "Eva: Pip, wait! Get back here!"
+        }
+      ]
+    },
+    {
+      "id": "pp-002",
+      "title": "The Hidden World",
+      "description": "Eva follows Pip into the crevice and discovers a breathtaking, bioluminescent cavern filled with glowing plants and strange, beautiful flora.",
+      "frames": [
+        {
+          "id": "frame-002-01",
+          "panel": 1,
+          "description": "Eva cautiously enters the dark crevice, her helmet light cutting through the gloom. The rock walls are slick and dark.",
+          "dialogue": "Eva: (Whispering) Pip... where did you go, you little rascal?"
+        },
+        {
+          "id": "frame-002-02",
+          "panel": 2,
+          "description": "Stunning reveal shot. Eva steps into a gigantic cavern. The entire space is filled with glowing, ethereal plants. Giant mushrooms pulse with soft blue light, and vines with luminous flowers hang from the ceiling. Pip is seen rolling happily in a patch of glowing moss.",
+          "dialogue": "Eva: (Awestruck) Whoa..."
+        }
+      ]
+    },
+    {
+      "id": "pp-003",
+      "title": "A Silent Guardian",
+      "description": "They find the garden is tended by an ancient, silent robotic guardian who is initially wary of their presence but is won over by Pip's playful antics.",
+      "frames": [
+        {
+          "id": "frame-003-01",
+          "panel": 1,
+          "description": "As Eva explores, a large, ancient-looking robot emerges from behind a giant glowing tree. It's made of stone and vines, with a single, glowing optic. It raises a large stone hand, looking threatening.",
+          "dialogue": ""
+        },
+        {
+          "id": "frame-003-02",
+          "panel": 2,
+          "description": "Close up on the robot's optic, which is focused intently on Eva. Eva freezes, holding her hands up in a peaceful gesture.",
+          "dialogue": "Eva: Easy there... We mean no harm."
+        },
+        {
+          "id": "frame-003-03",
+          "panel": 3,
+          "description": "Pip, oblivious to the tension, playfully bounces up to the robot's large foot and starts batting at a loose vine hanging from its leg.",
+          "dialogue": "Pip: (Happy chittering!)"
+        },
+        {
+          "id": "frame-003-04",
+          "panel": 4,
+          "description": "The robot's threatening posture softens. It slowly lowers its hand and tilts its head, its single optic dimming slightly as it watches Pip play. A low, soft hum emanates from the robot.",
+          "dialogue": ""
+        }
+      ]
+    }
+  ]
+}
