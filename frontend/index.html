@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comic Story Generator</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        #prompt { width: 100%; height: 100px; }
+        #story { white-space: pre-wrap; background-color: #f4f4f4; padding: 1rem; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Comic Story Generator</h1>
+    <textarea id="prompt" placeholder="Enter your comic idea here..."></textarea>
+    <br>
+    <button id="generateBtn">Generate Story</button>
+    <h2>Generated Story</h2>
+    <div id="story"></div>
+
+    <script>
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const prompt = document.getElementById('prompt').value;
+            const storyDiv = document.getElementById('story');
+            storyDiv.textContent = 'Generating...';
+
+            try {
+                const response = await fetch('/api/v1/generate-story', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                storyDiv.textContent = data.story_plot;
+            } catch (error) {
+                storyDiv.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
