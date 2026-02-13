@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Comic Creator - Interactive Storyboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: #f8f9fa; color: #212529; }
+        .container { max-width: 900px; margin: 2rem auto; padding: 1rem; }
+        h1 { text-align: center; }
+        .prompt-section { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
+        #prompt-input { flex-grow: 1; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 0.25rem; font-size: 1rem; }
+        #generate-plot-btn { padding: 0.75rem 1.5rem; background-color: #0d6efd; color: white; border: none; border-radius: 0.25rem; font-size: 1rem; cursor: pointer; }
+        #generate-plot-btn:hover { background-color: #0b5ed7; }
+        #spinner { text-align: center; display: none; margin: 2rem; font-size: 1.2rem; color: #6c757d; }
+        .plot-point { background-color: #fff; border: 1px solid #dee2e6; border-radius: 0.3rem; margin-bottom: 1.5rem; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: box-shadow 0.2s ease-in-out; }
+        .plot-point:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .plot-point-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .plot-point-title { font-size: 1.5rem; font-weight: 600; margin: 0; }
+        .plot-point-actions button { margin-left: 0.5rem; font-size: 0.9rem; padding: 0.5rem 1rem; cursor: pointer; border-radius: 0.25rem; border: 1px solid transparent; }
+        .edit-plot-btn { background-color: #6c757d; color: white; }
+        .generate-frames-btn { background-color: #198754; color: white; }
+        .frames-container { margin-top: 1.5rem; border-top: 1px solid #e9ecef; padding-top: 1.5rem; }
+        .comic-frame { background-color: #f8f9fa; padding: 1rem; border-radius: 0.25rem; margin-bottom: 1rem; }
+        .comic-frame p { margin: 0 0 0.5rem; }
+        .comic-frame .label { font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>AI Comic Creator</h1>
+        <div class="prompt-section">
+            <input type="text" id="prompt-input" placeholder="e.g., a shy librarian who finds a magical book">
+            <button id="generate-plot-btn">Generate Plot</button>
+        </div>
+
+        <div id="spinner">Generating... please wait.</div>
+
+        <div id="storyboard"></div>
+    </div>
+
+    <template id="plot-point-template">
+        <div class="plot-point">
+            <div class="plot-point-header">
+                <h2 class="plot-point-title"></h2>
+                <div class="plot-point-actions">
+                    <button class="edit-plot-btn">Edit Plot</button>
+                    <button class="generate-frames-btn">Generate Frames</button>
+                </div>
+            </div>
+            <p class="plot-point-description"></p>
+            <div class="frames-container"></div>
+            <div class="frames-spinner" style="display: none; text-align: center; margin-top: 1rem;">Generating frames...</div>
+        </div>
+    </template>
+
+    <template id="comic-frame-template">
+        <div class="comic-frame">
+            <p><span class="label">Panel #<span class="panel-number"></span>:</span></p>
+            <p><span class="label">Description:</span> <span class="description"></span></p>
+            <p><span class="label">Dialogue:</span> <em><span class="dialogue"></span></em></p>
+        </div>
+    </template>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const generatePlotBtn = document.getElementById('generate-plot-btn');
+            const promptInput = document.getElementById('prompt-input');
+            const storyboard = document.getElementById('storyboard');
+            const spinner = document.getElementById('spinner');
+
+            const plotPointTemplate = document.getElementById('plot-point-template');
+
+            // This object will hold the state of our story
+            let storyState = {}; // { plotPointId: { data: {}, frames: [] } }
+
+            generatePlotBtn.addEventListener('click', async () => {
+                const prompt = promptInput.value.trim();
+                if (!prompt) {
+                    alert('Please enter a comic idea.');
+                    return;
+                }
+
+                spinner.style.display = 'block';
+                storyboard.innerHTML = '';
+                storyState = {};
+
+                try {
+                    const response = await fetch('/api/v1/plot/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: prompt })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    renderPlotPoints(data.plot_points);
+
+                } catch (error) {
+                    storyboard.innerHTML = `<p style="color: red; text-align: center;">Error: ${error.message}</p>`;
+                } finally {
+                    spinner.style.display = 'none';
+                }
+            });
+
+            function renderPlotPoints(plotPoints) {
+                storyboard.innerHTML = ''; // Clear previous content
+                plotPoints.forEach(plotPoint => {
+                    // Store plot point data in our state object
+                    storyState[plotPoint.id] = { data: plotPoint, frames: [] };
+
+                    const plotPointNode = plotPointTemplate.content.cloneNode(true);
+                    const plotPointElement = plotPointNode.querySelector('.plot-point');
+
+                    plotPointElement.dataset.id = plotPoint.id;
+                    plotPointNode.querySelector('.plot-point-title').textContent = plotPoint.title;
+                    plotPointNode.querySelector('.plot-point-description').textContent = plotPoint.description;
+
+                    const generateFramesBtn = plotPointNode.querySelector('.generate-frames-btn');
+                    generateFramesBtn.addEventListener('click', handleGenerateFrames);
+                    
+                    // TODO: Add event listener for edit button
+                    // const editPlotBtn = plotPointNode.querySelector('.edit-plot-btn');
+
+                    storyboard.appendChild(plotPointNode);
+                });
+            }
+            
+            async function handleGenerateFrames(event) {
+                const plotPointElement = event.target.closest('.plot-point');
+                const plotPointId = plotPointElement.dataset.id;
+                const plotPointData = storyState[plotPointId].data;
+                const framesContainer = plotPointElement.querySelector('.frames-container');
+                const framesSpinner = plotPointElement.querySelector('.frames-spinner');
+
+                framesSpinner.style.display = 'block';
+                framesContainer.innerHTML = ''; // Clear existing frames
+                
+                try {
+                     const response = await fetch('/api/v1/frames/generate-for-plot-point', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ plot_point: plotPointData })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    storyState[plotPointId].frames = data.frames;
+                    renderFrames(framesContainer, data.frames)
+
+                } catch (error) {
+                    framesContainer.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                } finally {
+                    framesSpinner.style.display = 'none';
+                }
+            }
+
+            function renderFrames(container, frames) {
+                container.innerHTML = '';
+                const frameTemplate = document.getElementById('comic-frame-template');
+                frames.forEach(frame => {
+                    const frameNode = frameTemplate.content.cloneNode(true);
+                    frameNode.querySelector('.panel-number').textContent = frame.panel;
+                    frameNode.querySelector('.description').textContent = frame.description;
+                    frameNode.querySelector('.dialogue').textContent = frame.dialogue || 'No dialogue';
+                    container.appendChild(frameNode);
+                });
+            }
+
+        });
+    </script>
+
+</body>
+</html>

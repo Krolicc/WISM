@@ -1,17 +1,42 @@
-from fastapi import APIRouter
-from backend.models import StoryPrompt, GeneratedStory
-from backend.services import story_service
-ц
+from fastapi import APIRouter, HTTPException
+from backend.models import (
+    GeneratePlotRequest,
+    GenerateFramesRequest,
+    PlotResponse,
+    FramesResponse
+)
+from backend.services.story_service import (
+    generate_plot,
+    generate_frames_for_plot_point
+)
+
 router = APIRouter()
 
-@router.post("/generate-story", response_model=GeneratedStory)
-async def generate_story(prompt: StoryPrompt):
+@router.post("/plot/generate", response_model=PlotResponse)
+async def handle_generate_plot(request: GeneratePlotRequest):
     """
-    Receives a prompt and generates a story plot using an AI model.
+    API endpoint to generate the initial plot structure from a user prompt.
     """
-    # Call the story generation service
-    generated_plot = await story_service.generate_story_from_prompt(prompt.prompt)
-    
-    # For now, we use a static story_id
-    # In the future, this would be generated and stored in a database
-    return GeneratedStory(story_id=1, story_plot=generated_plot)
+    try:
+        plot_response = await generate_plot(request.prompt)
+        if not plot_response.plot_points:
+            raise HTTPException(status_code=500, detail="Failed to generate a plot from the model.")
+        return plot_response
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in /plot/generate endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/frames/generate-for-plot-point", response_model=FramesResponse)
+async def handle_generate_frames(request: GenerateFramesRequest):
+    """
+    API endpoint to generate comic frames for a single, specific plot point.
+    """
+    try:
+        frames_response = await generate_frames_for_plot_point(request.plot_point)
+        if not frames_response.frames:
+            raise HTTPException(status_code=500, detail="Failed to generate frames from the model.")
+        return frames_response
+    except Exception as e:
+        print(f"Error in /frames/generate-for-plot-point endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
