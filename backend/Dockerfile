@@ -2,17 +2,27 @@
 # https://hub.docker.com/_/python
 FROM python:3.10-slim
 
-# Allow statements and log messages to immediately appear in the Knative logs
+# Allow statements and log messages to immediately appear
 ENV PYTHONUNBUFFERED True
 
-# Copy local code to the container image.
+# Set the working directory in the container
 WORKDIR /app
-COPY . .
 
-# Install production dependencies.
-# We use the --no-cache-dir option to reduce the image size
-# And --no-interaction --no-ansi to make the output cleaner
+# Install poetry
+RUN pip install poetry
+
+# Copy the dependency files
+COPY pyproject.toml poetry.lock ./
+
+# Use Poetry to generate a requirements.txt file
+# --without-hashes is often needed for compatibility with some pip versions
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+# Install production dependencies from the generated requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the local code to the container image.
+COPY . .
 
 # Service must listen to $PORT environment variable.
 # This default value facilitates local development.
