@@ -68,6 +68,8 @@ const activeChapter = computed(() => projectsStore.activeChapter)
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
 /* --- GLOBAL RESET --- */
 button,
 input,
@@ -92,7 +94,6 @@ button {
 }
 
 /* --- GLOBAL STYLES --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 :root { --border-radius: 5px; --shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
 [data-theme="light"] { --main-color: #52958C; --sub-color: #A0B3BD; --container-bg: #FFFFFF; --text-color: #121416; --bg-color: #F1F3F5; --border-color: #DEE2E6; }
 [data-theme="dark"] { --main-color: #52958C; --sub-color: #5A6D7A; --container-bg: #2A303C; --text-color: #ecf0f1; --bg-color: #1E222A; --border-color: #495057; }

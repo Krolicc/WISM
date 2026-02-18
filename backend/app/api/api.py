@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import character, panel, scene, story
+from .endpoints import character, panel, scene, story
 
 api_router = APIRouter()
 

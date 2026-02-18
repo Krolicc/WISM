@@ -1,0 +1,15 @@
+# Ignore environment files
+.env
+
+# Ignore Node.js dependencies
+/node_modules
+/frontend/node_modules
+
+# Ignore build outputs
+/dist
+/frontend/dist
+
+# Ignore Python artifacts
+__pycache__/
+*.pyc
+.venv

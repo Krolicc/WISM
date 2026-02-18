@@ -4,12 +4,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from typing import List, Any
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 # --- Internal App Imports ---
-from app.core.config import settings
-from app import crud, models, schemas
+from ..core.config import settings
+from .. import crud, models, schemas
 
 # --- Pydantic Models for LangChain ---
 def_uuid = lambda: str(uuid.uuid4())
@@ -51,8 +51,7 @@ async def generate_plot(prompt: str) -> PlotResponse:
     """
     try:
         parser = JsonOutputParser(pydantic_object=PlotResponse)
-        # Using a more powerful model for plot generation
-        llm = get_llm("gemini-1.5-flash-latest") 
+        llm = get_llm("gemini-1.5-flash") 
 
         prompt_template = ChatPromptTemplate.from_messages([
             ("system", f"You are a master storyteller. Your task is to break down a user's idea into a compelling, structured plot for a short comic. Create 3-5 distinct plot points. For each plot point, provide a short, catchy title and a one or two-sentence description. You must format your entire output as a single, valid JSON object. Do not include any markdown formatting like ```json. The response should be only the JSON object. Here are the required fields: {{format_instructions}}"),
@@ -76,7 +75,7 @@ async def generate_frames_for_plot_point(plot_point: PlotPoint) -> FramesRespons
     """
     try:
         parser = JsonOutputParser(pydantic_object=FramesResponse)
-        llm = get_llm("gemini-1.5-flash-latest")
+        llm = get_llm("gemini-1.5-flash")
 
         prompt_template = ChatPromptTemplate.from_messages([
             ("system", f"You are a comic book writer and artist. Your job is to translate a single plot point into a sequence of 2-4 visual frames. For each frame, provide a panel number, a detailed visual description (camera angles, character actions, setting), and any dialogue. You must format the output as a single, valid JSON object. Do not include any markdown formatting like ```json. The response should be only the JSON object. Here are the required fields: {{format_instructions}}"),
@@ -99,14 +98,13 @@ async def generate_frames_for_plot_point(plot_point: PlotPoint) -> FramesRespons
 # --- Main Orchestration Function ---
 
 async def generate_and_save_story_content(
-    db: Session, *, story: models.Story, story_idea: str
+    db: AsyncSession, *, story: models.Story, story_idea: str
 ) -> None:
     """
     Generates and saves the full story content (scenes and panels) from an idea.
     """
     print(f"Starting content generation for story '{story.title}'...")
     
-    # 1. Generate Plot Points (Scenes)
     plot_response = await generate_plot(prompt=story_idea)
     if not plot_response.plot_points:
         print("Failed to generate plot points. Aborting.")
@@ -114,19 +112,16 @@ async def generate_and_save_story_content(
 
     print(f"Generated {len(plot_response.plot_points)} plot points.")
 
-    # 2. Iterate through plot points, create scenes, and generate panels for each
     for i, plot_point in enumerate(plot_response.plot_points):
-        # Create the Scene in the database
         scene_in = schemas.SceneCreate(
             title=plot_point.title,
             description=plot_point.description,
             scene_number=i + 1,
             story_id=story.id
         )
-        db_scene = crud.scene.create(db=db, obj_in=scene_in)
+        db_scene = await crud.scene.create(db=db, obj_in=scene_in)
         print(f"  - Created Scene {db_scene.scene_number}: '{db_scene.title}'")
 
-        # Generate Panels for the current Scene
         frames_response = await generate_frames_for_plot_point(plot_point)
         if not frames_response.frames:
             print(f"  - Failed to generate frames for scene {db_scene.scene_number}. Continuing to next scene.")
@@ -134,7 +129,6 @@ async def generate_and_save_story_content(
         
         print(f"    - Generated {len(frames_response.frames)} frames.")
 
-        # Create Panel objects in the database
         for frame in frames_response.frames:
             panel_in = schemas.PanelCreate(
                 panel_number=frame.panel_number,
@@ -142,6 +136,6 @@ async def generate_and_save_story_content(
                 dialogue=frame.dialogue,
                 scene_id=db_scene.id
             )
-            crud.panel.create(db=db, obj_in=panel_in)
+            await crud.panel.create(db=db, obj_in=panel_in)
     
     print(f"Content generation for story '{story.title}' complete.")

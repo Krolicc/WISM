@@ -3,6 +3,10 @@ import { ref, computed } from 'vue'
 import type { Project, Chapter, Scene, Frame } from '../types/index'
 import { useNavigationStore } from './navigation'
 
+// Define the base URL for the API. 
+// This is the public URL of your backend, which is forwarded by Cloud Workstation.
+const API_BASE_URL = 'https://9000-firebase-wism-1770010266998.cluster-4cmpbiopffe5oqk7tloeb2ltrk.cloudworkstations.dev';
+
 export const useProjectsStore = defineStore('projects', () => {
   const projects = ref<Project[]>([])
   const activeProjectId = ref<number | null>(null)
@@ -27,32 +31,39 @@ export const useProjectsStore = defineStore('projects', () => {
     navigation.showChapters() // Switch sidebar view to chapters
   }
 
-  // MOCK API CALLS (replace with actual API calls)
-
   async function createNewProject(prompt: string) {
-    const newProject: Project = {
-      id: Date.now(),
-      prompt,
-      chapters: [],
-      isLoading: true,
-    }
-    projects.value.unshift(newProject)
-    setActiveProject(newProject.id)
+    const response = await fetch(`${API_BASE_URL}/api/v1/stories`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
+        },
+        body: JSON.stringify({ title: prompt, description: prompt }),
+    });
+    const newProject = await response.json();
+    projects.value.unshift(newProject);
+    setActiveProject(newProject.id);
 
-    // --- Mock API Call: Generate Chapters ---
-    console.log(`Generating chapters for prompt: "${prompt}"`);
-    setTimeout(() => {
-        const generatedChapters: Chapter[] = [
-            { id: 1, title: 'The Discovery', scenes: [], isLoading: false },
-            { id: 2, title: 'The Confrontation', scenes: [], isLoading: false },
-            { id: 3, title: 'The Resolution', scenes: [], isLoading: false },
-        ];
-        const project = projects.value.find(p => p.id === newProject.id);
-        if (project) {
-            project.chapters = generatedChapters;
-            project.isLoading = false;
-        }
-    }, 2000);
+    const contentResponse = await fetch(`${API_BASE_URL}/api/v1/stories/${newProject.id}/generate_content`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ idea: prompt }),
+    });
+    const fullStory = await contentResponse.json();
+
+    const project = projects.value.find(p => p.id === newProject.id);
+    if (project) {
+        project.chapters = fullStory.scenes.map((scene: any) => ({
+            id: scene.id,
+            title: scene.title,
+            scenes: [], // Scenes will be fetched later
+            isLoading: false,
+        }));
+        project.isLoading = false;
+    }
   }
 
   async function generateScenesForChapter(projectId: number, chapterId: number) {
@@ -63,17 +74,26 @@ export const useProjectsStore = defineStore('projects', () => {
     if (!chapter) return;
 
     chapter.isLoading = true;
-    console.log(`Generating scenes for Chapter: "${chapter.title}"`);
     
-    // --- Mock API Call: Generate Scenes ---
-    setTimeout(() => {
-        const generatedScenes: Scene[] = [
-            { id: 101, title: 'A Strange Signal', frames: [] },
-            { id: 102, title: 'Investigating the Source', frames: [] },
-        ];
-        chapter.scenes = generatedScenes;
-        chapter.isLoading = false;
-    }, 2000);
+    const response = await fetch(`${API_BASE_URL}/api/v1/scenes/${chapterId}/generate_panels`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+        },
+    });
+    const scenes = await response.json();
+
+    chapter.scenes = scenes.map((scene: any) => ({
+        id: scene.id,
+        title: scene.description,
+        frames: scene.panels.map((panel: any) => ({
+            frame_id: panel.id,
+            image_url: panel.image_url,
+            narration: panel.narration,
+        })),
+    }));
+
+    chapter.isLoading = false;
   }
 
   async function generateFramesForScene(projectId: number, chapterId: number, sceneId: number) {
@@ -85,17 +105,22 @@ export const useProjectsStore = defineStore('projects', () => {
     if (!scene) return;
 
     scene.isLoading = true;
-    console.log(`Generating frames for Scene: "${scene.title}"`);
 
-    // --- Mock API Call: Generate Frames ---
-    setTimeout(() => {
-        const generatedFrames: Frame[] = [
-            { frame_id: String(Date.now() + 1), image_url: `https://picsum.photos/seed/${Math.random()}/400/225`, narration: 'A lone astronaut discovers a mysterious signal emanating from a desolate moon.' },
-            { frame_id: String(Date.now() + 2), image_url: `https://picsum.photos/seed/${Math.random()}/400/225`, narration: 'The on-board computer flickers, displaying alien-like symbols.' },
-        ];
-        scene.frames = generatedFrames;
-        scene.isLoading = false;
-    }, 2000);
+    const response = await fetch(`${API_BASE_URL}/api/v1/panels/${sceneId}/generate_image`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+        },
+    });
+    const frame = await response.json();
+
+    scene.frames.push({
+        frame_id: frame.id,
+        image_url: frame.image_url,
+        narration: frame.narration,
+    });
+
+    scene.isLoading = false;
 
   }
 
