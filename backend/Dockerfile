@@ -8,27 +8,18 @@ WORKDIR /app
 # Install poetry
 RUN pip install poetry
 
-# Configure poetry to not create a virtual environment. 
-# This makes it install dependencies into the system's python path,
-# which is a common and clean practice for Docker containers.
-RUN poetry config virtualenvs.create false
-
-# Copy only the dependency definition files
+# Copy dependency definition files
 COPY pyproject.toml poetry.lock ./
 
-# Install production dependencies using poetry's native command
-# --no-dev: Skips development dependencies
-# --no-root: Skips installing the project package itself
-# --no-interaction --no-ansi: For cleaner logs
-RUN poetry install --without dev --no-root
+# Configure poetry to not create a virtual environment and install dependencies.
+# This is a robust practice for Docker containers.
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root --only main
 
-# Copy the rest of the local code to the container image.
+# Copy the rest of the application code to the container image.
 COPY . .
 
-# Service must listen to $PORT environment variable.
-# This default value facilitates local development.
-ENV PORT 8080
-
-# Run the web server on container startup.
-# Gunicorn is now available in the system's PATH.
-CMD ["gunicorn", "--bind", ":$PORT", "--workers", "1", "--worker-class", "uvicorn.workers.UvicornWorker", "--timeout", "0", "main:app"]
+# The ENTRYPOINT is a shell command that first runs database migrations
+# and then starts the Uvicorn server.
+# It correctly uses the $PORT environment variable provided by Render.
+ENTRYPOINT ["sh", "-c", "poetry run alembic upgrade head && poetry run uvicorn main:app --host 0.0.0.0 --port $PORT"]
