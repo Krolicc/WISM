@@ -2,9 +2,6 @@
 # The full image includes build tools needed for compiling some packages.
 FROM python:3.10
 
-# Allow statements and log messages to immediately appear
-ENV PYTHONUNBUFFERED True
-
 # Set the working directory in the container
 WORKDIR /app
 
@@ -23,7 +20,7 @@ COPY pyproject.toml poetry.lock ./
 # --no-dev: Skips development dependencies
 # --no-root: Skips installing the project package itself
 # --no-interaction --no-ansi: For cleaner logs
-RUN poetry install --no-dev --no-root --no-interaction --no-ansi
+RUN poetry install --without dev --no-root
 
 # Copy the rest of the local code to the container image.
 COPY . .
@@ -34,4 +31,4 @@ ENV PORT 8080
 
 # Run the web server on container startup.
 # Gunicorn is now available in the system's PATH.
-CMD exec gunicorn --bind :$PORT --workers 1 --worker-class uvicorn.workers.UvicornWorker --timeout 0 main:app
+CMD ["gunicorn", "--bind", ":$PORT", "--workers", "1", "--worker-class", "uvicorn.workers.UvicornWorker", "--timeout", "0", "main:app"]
