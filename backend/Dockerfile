@@ -11,15 +11,19 @@ WORKDIR /app
 # Install poetry
 RUN pip install poetry
 
-# Copy the dependency files
+# Configure poetry to not create a virtual environment. 
+# This makes it install dependencies into the system's python path,
+# which is a common and clean practice for Docker containers.
+RUN poetry config virtualenvs.create false
+
+# Copy only the dependency definition files
 COPY pyproject.toml poetry.lock ./
 
-# Use Poetry to generate a requirements.txt file
-# --without-hashes is often needed for compatibility with some pip versions
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
-
-# Install production dependencies from the generated requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Install production dependencies using poetry's native command
+# --no-dev: Skips development dependencies
+# --no-root: Skips installing the project package itself
+# --no-interaction --no-ansi: For cleaner logs
+RUN poetry install --no-dev --no-root --no-interaction --no-ansi
 
 # Copy the rest of the local code to the container image.
 COPY . .
@@ -29,5 +33,5 @@ COPY . .
 ENV PORT 8080
 
 # Run the web server on container startup.
-# Use gunicorn for production with multiple workers.
+# Gunicorn is now available in the system's PATH.
 CMD exec gunicorn --bind :$PORT --workers 1 --worker-class uvicorn.workers.UvicornWorker --timeout 0 main:app
