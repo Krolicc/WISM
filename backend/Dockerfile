@@ -1,6 +1,6 @@
-# Use an official lightweight Python image.
-# https://hub.docker.com/_/python
-FROM python:3.10-slim
+# Use an official Python image.
+# The full image includes build tools needed for compiling some packages.
+FROM python:3.10
 
 # Allow statements and log messages to immediately appear
 ENV PYTHONUNBUFFERED True
