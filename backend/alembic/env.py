@@ -11,6 +11,9 @@ from alembic import context
 from app.database import Base
 from app.models import *  # Import all models to ensure they are registered with Base
 
+# Import the settings from your application
+from app.core.config import settings
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -27,13 +30,12 @@ target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    url = config.get_main_option("sqlalchemy.url")
+    url = settings.db.url
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch=True,  # Add this line
     )
 
     with context.begin_transaction():
@@ -44,7 +46,6 @@ def do_run_migrations(connection):
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
-        render_as_batch=True,  # And this line
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -52,8 +53,9 @@ def do_run_migrations(connection):
 
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    # Connect to the database using the URL from the app's settings
     connectable = create_async_engine(
-        config.get_main_option("sqlalchemy.url"),
+        settings.db.url, 
         poolclass=pool.NullPool,
     )
 

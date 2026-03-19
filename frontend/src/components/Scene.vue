@@ -9,14 +9,13 @@
     </div>
     <div v-if="!isCollapsed" class="scene-content">
         <div v-if="scene.frames && scene.frames.length > 0" class="frames-grid">
-            <div v-for="frame in scene.frames" :key="frame.frame_id" class="frame-item">
+            <div v-for="frame in scene.frames" :key="frame.id" class="frame-item">
                 <img :src="frame.image_url" alt="Comic frame" class="frame-image">
                 <p class="frame-narration">{{ frame.narration }}</p>
             </div>
         </div>
         <div v-else class="no-frames-message">
-            <p>This scene has no frames yet.</p>
-            <button class="generate-btn" @click.stop="generateFrames">Generate Frames</button>
+            <p>This scene has no frames.</p>
         </div>
     </div>
   </div>
@@ -25,33 +24,18 @@
 <script setup lang="ts">
 import { ref, type PropType } from 'vue'
 import type { Scene } from '../types/index'
-import { useProjectsStore } from '../stores/projects'
 
 const props = defineProps({
   scene: {
     type: Object as PropType<Scene>,
     required: true
-  },
-  projectId: {
-      type: Number,
-      required: true
-  },
-  chapterId: { // We need chapterId to generate frames for the correct scene
-      type: Number,
-      required: true
   }
 })
 
-const projectsStore = useProjectsStore();
 const isCollapsed = ref(true)
 
 function toggleCollapse() {
   isCollapsed.value = !isCollapsed.value
-}
-
-function generateFrames() {
-    console.log(`Generating frames for Project ID: ${props.projectId}, Chapter ID: ${props.chapterId}, Scene ID: ${props.scene.id}`);
-    projectsStore.generateFramesForScene(props.projectId, props.chapterId, props.scene.id);
 }
 
 </script>
@@ -123,19 +107,5 @@ function generateFrames() {
     text-align: center;
     padding: 3rem 1rem;
     color: var(--sub-color);
-}
-.generate-btn {
-    margin-top: 1.5rem;
-    background-color: var(--main-color);
-    color: white;
-    padding: 0.8rem 1.75rem;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: filter 0.2s;
-}
-.generate-btn:hover {
-    filter: brightness(110%);
 }
 </style>

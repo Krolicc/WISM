@@ -1,0 +1,203 @@
+version: '3.8'
+
+services:
+  # --- PostgreSQL Database Service ---
+  db:
+    image: postgres:13
+    container_name: comic_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dbname
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    networks:
+      - comic_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d dbname"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Redis Service for Celery Broker ---
+  redis:
+    image: redis:alpine
+    container_name: comic_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - comic_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Backend FastAPI Service ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: comic_backend
+    command: /bin/bash -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_HOST=db
+      - DB_NAME=dbname
+      - DB_PORT=5432
+      - DATABASE_URL=postgresql+asyncpg://user:password@db:5432/dbname
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_AI_MODEL_VERSION=${GOOGLE_AI_MODEL_VERSION}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379/0
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+      - NEO4J_URI=bolt://graph_db:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password
+    networks:
+      - comic_net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chroma:
+        condition: service_started
+
+  graph_db:
+    image: neo4j:5.18.0
+    container_name: comic_graph_db
+    environment:
+      - NEO4J_AUTH=neo4j/password # IMPORTANT: Change in production
+    ports:
+      - "7474:7474" # Web UI
+      - "7687:7687" # Bolt protocol
+    volumes:
+      - neo4j_data:/data
+    networks:
+      - comic_net
+
+  # --- Story Analyzer Service (Worker) ---
+  analyzer:
+    container_name: analyzer_service
+    build:
+      context: ./analyzer_service
+    command: python app/main.py 
+    volumes:
+      - ./analyzer_service:/app
+    environment:
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_HOST=db
+      - DB_NAME=dbname
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - NEO4J_URI=bolt://graph_db:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_AI_MODEL_VERSION=${GOOGLE_AI_MODEL_VERSION}
+    depends_on:
+      - redis
+      - graph_db
+      - db
+    networks:
+      - comic_net
+
+  # --- Celery Worker Service ---
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: comic_celery_worker
+    command: /bin/bash -c "celery -A main.celery_app worker --loglevel=info -Q celery"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_HOST=db
+      - DB_NAME=dbname
+      - DB_PORT=5432
+      - DATABASE_URL=postgresql+asyncpg://user:password@db:5432/dbname
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_AI_MODEL_VERSION=${GOOGLE_AI_MODEL_VERSION}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379/0
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+    networks:
+      - comic_net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chroma:
+        condition: service_started
+  
+  # --- Vector Database Service ---
+  chroma:
+    image: chromadb/chroma
+    container_name: comic_chroma
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/.chroma/index
+    networks:
+      - comic_net
+
+  # --- Frontend Vue.js Service ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: comic_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=https://8000-firebase-wism-1770010266998.cluster-4cmpbiopffe5oqk7tloeb2ltrk.cloudworkstations.dev
+    networks:
+      - comic_net
+    depends_on:
+      - backend
+
+  # --- pgAdmin Service for Database Management ---
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: comic_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - comic_net
+    depends_on:
+      db:
+        condition: service_healthy
+
+# --- Volumes Definition ---
+volumes:
+  postgres_data:
+    driver: local
+  chroma_data:
+    driver: local
+  neo4j_data:
+    driver: local
+
+# --- Network Definition ---
+networks:
+  comic_net:
+    driver: bridge

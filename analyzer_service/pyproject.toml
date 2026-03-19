@@ -1,0 +1,23 @@
+
+[tool.poetry]
+name = "analyzer-service"
+version = "0.1.0"
+description = "A worker service to extract knowledge graphs from text and store them in Neo4j."
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+networkx = "^3.3"
+redis = {extras = ["hiredis"], version = "^7.3.0"}
+neo4j = "^5.18.0"
+langchain-google-genai = "^4.2.1"
+pydantic-settings = "^2.13.1"
+celery = "^5.6.2"
+sqlalchemy = "^2.0.48"
+asyncpg = "^0.31.0"
+tenacity = "^9.1.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -15,7 +15,7 @@ const themeStore = useThemeStore()
 .theme-switcher {
   background-color: transparent;
   color: var(--text-color);
-  border: 1px solid var(--sub-color);
+  border: none;
   width: 40px;
   height: 40px;
   display: flex;
