@@ -1,10 +1,11 @@
+
 import { defineStore } from 'pinia';
 import { ref, onBeforeUnmount } from 'vue';
-import { useContentStore } from './content';
+import { useContentManageStore, StoryNode } from './content_manage';
 import { useToasts } from './toast';
 
 export const useSocketStore = defineStore('socket', () => {
-  const contentStore = useContentStore();
+  const contentStore = useContentManageStore();
   const toastStore = useToasts();
   const socket = ref<WebSocket | null>(null);
   const isConnected = ref(false);
@@ -22,10 +23,7 @@ export const useSocketStore = defineStore('socket', () => {
   }
 
   function connect(storyId: string) {
-    // If already connected to this story, do nothing
     if (isConnected.value && currentStoryId.value === storyId) return;
-    
-    // If connected to a different story, disconnect first
     if (socket.value) disconnect();
 
     currentStoryId.value = storyId;
@@ -42,19 +40,20 @@ export const useSocketStore = defineStore('socket', () => {
       socket.value.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
-          const { type, data, story_id } = payload;
+          const { type, data } = payload;
 
-          switch (type) {
-            case 'STORY_UPDATED':
-              contentStore.updateStoryInStore(data);
-              toastStore.showToast("Chapter Generated");
-              break;
-            case 'CHAPTER_UPDATED':
-              contentStore.updateChapterInStore(story_id, data);
-              toastStore.showToast("Scene Generated");
-              break;
-            default:
-              toastStore.showToast(`Unknown socket message type: ${type}`);
+          if (type.endsWith('_UPDATED')) {
+            // This assumes the `data` payload is a valid StoryNode object.
+            // We will need to add the `addOrUpdateNode` action to the content store.
+            (contentStore as any).addOrUpdateNode(data as StoryNode);
+
+            const nodeType = (data as StoryNode).type || 'Item';
+            const readableType = nodeType.charAt(0).toUpperCase() + nodeType.slice(1);
+            toastStore.showToast(`${readableType} was updated.`);
+
+          } else {
+            console.warn(`Unknown socket message type: ${type}`);
+            toastStore.showToast(`Received an unknown update from the server.`);
           }
         } catch (e) {
           console.error('Failed to parse WebSocket message:', e);
@@ -64,7 +63,6 @@ export const useSocketStore = defineStore('socket', () => {
       socket.value.onclose = (event) => {
         isConnected.value = false;
         console.log('WebSocket disconnected', event.reason);
-        // Optional: Implement reconnection logic here if needed
       };
 
       socket.value.onerror = (error) => {
