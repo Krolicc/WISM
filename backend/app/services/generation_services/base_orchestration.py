@@ -9,12 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import models, crud
 from app.crud.base import CRUDBase
-from .tools.llm.run_llm_generation import run_llm_generation
-
 from app.services.vector_store_service.comic_vector_store_service import comic_vector_store_service
 from app.core.graph_crud_service import graph_crud_service
 from app.core.neo4j_service import neo4j_service
 from app.schemas.graph import base as graph_schemas
+
+from .tools.llm.run_llm_generation import run_llm_generation
+from .tools.entity_analysis_agent import _run_entity_analysis_agent
+
 
 GRAPH_NODE_SCHEMA_REGISTRY = {
     "story": graph_schemas.StoryNode,
@@ -295,6 +297,8 @@ class BaseOrchestrationService(abc.ABC):
                 db_obj=updated_item,
                 story_id=story_id
             )
+
+        await _run_entity_analysis_agent(db, item=updated_item)
         
         return updated_item
 
