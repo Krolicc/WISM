@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "story-processor"
+version = "0.1.0"
+description = "Интеллектуальная платформа для сквозной генерации мультимедийного повествовательного контента (комиксов/сторибордов) с использованием технологий генеративного ИИ"
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.12.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

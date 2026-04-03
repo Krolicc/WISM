@@ -1,28 +1,21 @@
 
-from pydantic import BaseModel
 import uuid
+from pydantic import BaseModel
 from typing import List, Optional
 
 class SceneBase(BaseModel):
     title: str
+    overview: Optional[str] = None
     description: Optional[str] = None
 
 class SceneCreate(SceneBase):
-    chapter_id: uuid.UUID
-    order: int
+    pass
 
 class SceneUpdate(SceneBase):
     title: Optional[str] = None
-    order: Optional[int] = None
 
 class SceneRead(SceneBase):
     id: uuid.UUID
-    order: int
-    frames: List["FrameRead"] = []
 
     class Config:
         from_attributes = True
-
-from .frame import FrameRead
-
-SceneRead.model_rebuild()

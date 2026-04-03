@@ -1,0 +1,16 @@
+
+As a lead editor, you are given a list of potential chapter starting points, identified from various overlapping chunks of a single, large story.
+Your task is to analyze this list, remove duplicates, discard any false positives, and produce a final, ordered list of definitive chapters.
+
+Potential Chapters List:
+```
+{potential_chapters_list}
+```
+
+Review the list and construct a final, canonical sequence of chapters.
+Respond with a JSON object containing a single key "chapters", which is a list of objects.
+Each object must have the following structure:
+{{
+  "title": "The Final Chapter Title",
+  "first_sentence": "The complete first sentence of the chapter."
+}}

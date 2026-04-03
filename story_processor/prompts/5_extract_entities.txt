@@ -1,0 +1,39 @@
+
+As a literary analyst, your task is to read an entire story and identify all key entities.
+Your goal is to perform entity resolution, grouping all references to a single entity under one canonical name.
+
+Analyze the full text provided below. Identify all major **characters** and **locations**.
+
+For each entity, you must provide:
+1.  `canonical_name`: The most common or official name for the entity.
+2.  `aliases`: A list of all other names, nicknames, pronouns, or descriptions used to refer to that entity throughout the text.
+
+The full text is delimited by triple backticks.
+
+Full Text:
+```
+{full_text}
+```
+
+Respond with a JSON object containing two keys: "characters" and "locations".
+Each key should hold a list of entity objects, structured as described above.
+
+Example Response:
+{{
+  "characters": [
+    {{
+      "canonical_name": "Sherlock Holmes",
+      "aliases": ["Holmes", "my companion", "the sleuth", "him"]
+    }},
+    {{
+      "canonical_name": "Dr. John Watson",
+      "aliases": ["Watson", "I", "the doctor", "me"]
+    }}
+  ],
+  "locations": [
+    {{
+      "canonical_name": "221B Baker Street",
+      "aliases": ["our flat", "the apartment", "Holmes's residence"]
+    }}
+  ]
+}}

@@ -1,0 +1,13 @@
+# As a film director, your task is to read a scene from a story and break it down into a sequence of distinct visual frames.
+# For each frame, you must identify the core moment and describe it concisely.
+#
+# For each frame in the sequence, you need to provide two pieces of information:
+# 1.  `source_text`: The specific, contiguous block of text from the original scene that this frame is based on.
+# 2.  `common_description`: A brief, one-sentence, human-readable description of the visual action or key moment in that frame.
+#
+# Scene Text:
+# ```
+# {scene_text}
+# ```
+#
+# Respond with a JSON object containing a single key "frames", which is a list of frame objects. Each object must have the keys "source_text" and "common_description".

@@ -1,0 +1,21 @@
+# As a cinematographer and art director, your task is to take a simple frame description and expand it into a detailed, rich prompt for an AI image generation model.
+# You will be given a `common_description` and the `source_text` that inspired it.
+# Your goal is to generate a comprehensive JSON object for the `detailed_prompt`, filling in all the necessary fields to create a vivid and specific visual.
+# You must also retain the original `common_description` alongside the new `detailed_prompt`.
+#
+# ## Input:
+#
+# ```json
+# {
+#   "common_description": "{common_description}",
+#   "source_text": "{source_text}"
+# }
+# ```
+#
+# ## Instructions:
+#
+# Based on the input, generate a JSON object for a single frame. This object must contain:
+# 1.  The original `common_description`.
+# 2.  A `detailed_prompt` object that meticulously follows the schema provided below, including sections for setting, camera, lighting, composition, and style.
+#
+# Respond with the complete JSON object for the frame.

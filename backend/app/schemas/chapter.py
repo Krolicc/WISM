@@ -1,28 +1,21 @@
 
-from pydantic import BaseModel
 import uuid
+from pydantic import BaseModel
 from typing import List, Optional
 
 class ChapterBase(BaseModel):
     title: str
+    overview: Optional[str] = None
     description: Optional[str] = None
 
 class ChapterCreate(ChapterBase):
-    story_id: uuid.UUID
-    order: int
+    pass
 
 class ChapterUpdate(ChapterBase):
     title: Optional[str] = None
-    order: Optional[int] = None
 
 class ChapterRead(ChapterBase):
     id: uuid.UUID
-    order: int
-    scenes: List["SceneRead"] = []
 
     class Config:
         from_attributes = True
-
-from .scene import SceneRead
-
-ChapterRead.model_rebuild()

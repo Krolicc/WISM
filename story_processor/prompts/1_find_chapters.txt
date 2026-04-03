@@ -1,0 +1,26 @@
+
+As an expert editor, your task is to analyze a chunk of a larger text and identify potential chapter breaks.
+A chapter usually begins with a significant shift in topic, time, or narrative focus.
+
+Analyze the provided text chunk. If you identify the beginning of one or more new chapters within this chunk, provide the following for each:
+1.  A concise and compelling title for the potential chapter.
+2.  The full first sentence of that chapter, which will serve as a unique marker.
+
+The text chunk is delimited by triple backticks.
+
+Text Chunk:
+```
+{text_chunk}
+```
+
+Respond with a JSON object containing a single key "potential_chapters", which is a list of objects.
+Each object must have the following structure:
+{{
+  "title": "A Suggested Chapter Title",
+  "first_sentence": "The complete first sentence of the potential chapter..."
+}}
+
+If no new chapters appear to begin in this chunk, return an empty list:
+{{
+  "potential_chapters": []
+}}

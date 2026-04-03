@@ -1,0 +1,15 @@
+
+As a professional screenwriter, your task is to break down a chapter from a story into a sequence of distinct scenes.
+A scene is a continuous block of action that takes place in a single location at a single point in time.
+For each scene you identify, provide:
+1.  A brief summary.
+2.  A list of characters present.
+3.  The location.
+4.  The full text of the scene.
+
+Chapter Text:
+```
+{chapter_text}
+```
+
+Respond with a JSON object containing a single key "scenes", which is a list of scene objects with keys: "summary", "characters", "location", "text".

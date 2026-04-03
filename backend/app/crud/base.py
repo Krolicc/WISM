@@ -1,11 +1,11 @@
 
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union, get_args
 import uuid
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy.future import select, delete
 
 from app.database import Base
 
@@ -18,18 +18,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
-    def _get_eager_loading_options(self) -> list:
-        """
-        Returns a list of SQLAlchemy loader options for eager loading.
-        This method is intended to be overridden by subclasses.
-        """
-        return []
+        generic_args = get_args(self.__class__.__orig_bases__[0])
+        if generic_args:
+            self.create_schema = generic_args[1]
+            self.update_schema = generic_args[2]
+        else:
+            # Fallback for any case where introspection might fail, though it shouldn't.
+            self.create_schema = CreateSchemaType
+            self.update_schema = UpdateSchemaType
 
     async def get(self, db: AsyncSession, id: uuid.UUID) -> Optional[ModelType]:
         statement = select(self.model).filter(self.model.id == id)
-        options = self._get_eager_loading_options()
-        if options:
-            statement = statement.options(*options)
 
         result = await db.execute(statement)
         return result.unique().scalars().first()
@@ -38,12 +37,20 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
         statement = select(self.model).order_by(self.model.id).offset(skip).limit(limit)
-        options = self._get_eager_loading_options()
-        if options:
-            statement = statement.options(*options)
 
         result = await db.execute(statement)
         return result.unique().scalars().all()
+
+    async def get_multi_by_ids(
+        self, db: AsyncSession, *, ids: List[Any]
+    ) -> List[ModelType]:
+        if not ids:
+            return []
+        
+        result = await db.execute(
+            select(self.model).where(self.model.id.in_(ids))
+        )
+        return result.scalars().all()
 
     async def create(
         self, db: AsyncSession, *, obj_in: CreateSchemaType, commit: bool = True
@@ -93,3 +100,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             await db.delete(obj)
             await db.commit()
         return obj
+
+    async def remove_many(self, db: AsyncSession, *, ids: List[ModelId]) -> int:
+        """
+        Удаляет несколько объектов из базы данных по списку их ID.
+
+        Возвращает количество удаленных записей.
+        """
+        if not ids:
+            return 0
+        
+        stmt = delete(self.model).where(self.model.id.in_(ids))
+        
+        result = await db.execute(stmt)
+        return result.rowcount
