@@ -1,0 +1,26 @@
+
+[tool.poetry]
+name = "media"
+version = "0.1.0"
+description = "Сервис для генерации изображений"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.*"
+fastapi = "^0.128.0"
+uvicorn = {extras = ["standard"], version = "^0.40.0"}
+pydantic-settings = "^2.3.0"
+alembic = "^1.18.4"
+sqlalchemy = "^2.0.46"
+greenlet = "^3.3.1"
+asyncpg = "^0.31.0"
+celery = "^5.6.2"
+redis = "^7.2.1"
+httpx = "^0.27.0"
+websockets = "^12.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
