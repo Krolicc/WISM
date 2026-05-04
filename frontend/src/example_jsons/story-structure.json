@@ -1,0 +1,283 @@
+{
+    "stories": {
+        "S1": {
+            "id": "S1",
+            "type": "story",
+            "title": "История о Рыцаре",
+            "children_ids": ["A1", "A2", "BSA1", "A5"]
+        }
+    },
+    "nodes": {
+        "A1": {
+            "id": "A1",
+            "type": "arc",
+            "content": {
+                "title": "Вступление"
+            },
+            "parent_id": "S1",
+            "next_ids": ["A2"],
+            "prev_ids": [],
+            "children_ids": []
+        },
+        "A2": {
+            "id": "A2",
+            "type": "arc",
+            "content": {
+                "title": "Поиск Камня"
+            },
+            "parent_id": "S1",
+            "next_ids": ["BSA1"],
+            "prev_ids": ["A1"],
+            "children_ids": []
+        },
+        "BSA1": {
+            "id": "BSA1",
+            "type": "branchSet",
+            "title": "Выбор пути (Арки)",
+            "question": "Как герой решит пойти на поиски?",
+            "parent_id": "S1",
+            "next_ids": ["A3", "A4"],
+            "prev_ids": ["A2"],
+            "branches": {
+                "A3": {"label": "Путь через горы"},
+                "A4": {"label": "Путь через болота"}
+            }
+        },
+        "A3": {
+            "id": "A3",
+            "type": "arc",
+            "content": {
+                "title": "Путь через горы"
+            },
+            "parent_id": "BSA1",
+            "next_ids": ["A5"],
+            "prev_ids": ["BSA1"],
+            "children_ids": [
+                "C1",
+                "C2",
+                "C3",
+                "C4",
+                "BSC4"
+            ]
+        },
+        "A4": {
+            "id": "A4",
+            "type": "arc",
+            "content": {
+                "title": "Путь через болота"
+            },
+            "parent_id": "BSA1",
+            "next_ids": ["A5"],
+            "prev_ids": ["BSA1"],
+            "children_ids": []
+        },
+        "A5": {
+            "id": "A5",
+            "type": "arc",
+            "content": {
+                "title": "Прибытие в Цитадель"
+            },
+            "parent_id": "S1",
+            "next_ids": [],
+            "prev_ids": ["A3", "A4"],
+            "children_ids": []
+        },
+        "C1": {
+            "id": "C1",
+            "type": "chapter",
+            "content": {
+                "title": "Начало пути"
+            },
+            "parent_id": "A3",
+            "next_ids": ["C2"],
+            "prev_ids": [],
+            "children_ids": []
+        },
+        "C2": {
+            "id": "C2",
+            "type": "chapter",
+            "content": {
+                "title": "Горный перевал"
+            },
+            "parent_id": "A3",
+            "next_ids": ["C3"],
+            "prev_ids": ["C1"],
+            "children_ids": []
+        },
+        "C3": {
+            "id": "C3",
+            "type": "chapter",
+            "content": {
+                "title": "Секреты прошлого (Параллельная глава)"
+            },
+            "parent_id": "A3",
+            "next_ids": ["C4"],
+            "prev_ids": ["C2"],
+            "children_ids": []
+        },
+        "C4": {
+            "id": "C4",
+            "type": "chapter",
+            "content": {
+                "title": "Встреча с драконом"
+            },
+            "parent_id": "A3",
+            "next_ids": ["BSC4"],
+            "prev_ids": ["C3"],
+            "children_ids": []
+        },
+        "BSC4": {
+            "id": "BSC4",
+            "type": "branchSet",
+            "title": "Выбор тактики (Главы)",
+            "parent_id": "A3",
+            "next_ids": ["C5", "C6"],
+            "prev_ids": ["C4"],
+            "branches": {
+                "C5": {"label": "Битва"},
+                "C6": {"label": "Переговоры"}
+            }
+        },
+        "C5": {
+            "id": "C5",
+            "type": "chapter",
+            "content": {
+                "title": "Битва"
+            },
+            "parent_id": "BSC4",
+            "next_ids": [],
+            "prev_ids": ["BSC4"],
+            "children_ids": [
+                "S5.1",
+                "BSS5",
+                "S5.C",
+                "S5.D"
+            ]
+        },
+        "C6": {
+            "id": "C6",
+            "type": "chapter",
+            "content": {
+                "title": "Переговоры"
+            },
+            "parent_id": "BSC4",
+            "next_ids": [],
+            "prev_ids": ["BSC4"],
+            "children_ids": []
+        },
+        "S5.1": {
+            "id": "S5.1",
+            "type": "scene",
+            "content": {
+                "title": "Рыцарь точит меч",
+                "description": "Рыцарь готовится к битве в тускло освещенной кузнице. Камень скрежещет по стали, высекая искры. Он проверяет остроту лезвия большим пальцем. Его лицо полно решимости."
+            },
+            "parent_id": "C5",
+            "next_ids": ["BSS5"],
+            "prev_ids": [],
+            "children_ids": [
+                "F1",
+                "F2",
+                "F3",
+                "F1",
+                "F2",
+                "F3"
+            ]
+        },
+        "BSS5": {
+            "id": "BSS5",
+            "type": "branchSet",
+            "title": "Выбор действия (Сцены)",
+            "parent_id": "C5",
+            "next_ids": ["S5.A", "S5.B"],
+            "prev_ids": ["S5.1"],
+            "branches": {
+                "S5.A": {"label": "Лобовая атака"},
+                "S5.B": {"label": "Засада у ручья"}
+            }
+        },
+        "S5.A": {
+            "id": "S5.A",
+            "type": "scene",
+            "content": {
+                "title": "Лобовая атака"
+            },
+            "parent_id": "BSS5",
+            "next_ids": ["S5.C"],
+            "prev_ids": ["BSS5"],
+            "children_ids": []
+        },
+        "S5.B": {
+            "id": "S5.B",
+            "type": "scene",
+            "content": {
+                "title": "Засада у ручья"
+            },
+            "parent_id": "BSS5",
+            "next_ids": ["S5.D"],
+            "prev_ids": ["BSS5"],
+            "children_ids": []
+        },
+        "S5.C": {
+            "id": "S5.C",
+            "type": "scene",
+            "content": {
+                "title": "Дракон повержен"
+            },
+            "parent_id": "C5",
+            "next_ids": [],
+            "prev_ids": ["S5.A"],
+            "children_ids": []
+        },
+        "S5.D": {
+            "id": "S5.D",
+            "type": "scene",
+            "content": {
+                "title": "Находка в пещере"
+            },
+            "parent_id": "C5",
+            "next_ids": [],
+            "prev_ids": ["S5.B"],
+            "children_ids": []
+        }
+    },
+
+    "frames": {
+        "F1": {
+            "id": "F1",
+            "type": "frame",
+            "title": "Крупный план: точильный камень",
+            "description": "Камень скрежещет по стали, высекая искры.",
+            "image_url": "https://i.pinimg.com/736x/f9/0b/e6/f90be67d0972abf131be7f34f9bb2601.jpg",
+            "detailed_prompt": {},
+            "source_text_range": {
+                "start": 54,
+                "end": 95
+            }
+        },
+        "F2": {
+            "id": "F2",
+            "type": "frame",
+            "title": "Проверка лезвия",
+            "description": "Он проверяет остроту лезвия большим пальцем.",
+            "image_url": "https://i.pinimg.com/1200x/c4/8e/f7/c48ef73fe134b34b1bd74f93c7ec2f9c.jpg",
+            "detailed_prompt": {},
+            "source_text_range": {
+                "start": 96,
+                "end": 140
+            }
+        },
+        "F3": {
+            "id": "F3",
+            "type": "frame",
+            "title": "Лицо рыцаря",
+            "description": "Его лицо полно решимости.",
+            "image_url": "https://i.pinimg.com/736x/94/76/a5/9476a559c218b2aa25e9cbdbd5299e57.jpg",
+            "detailed_prompt": {},
+            "source_text_range": {
+                "start": 141,
+                "end": 183
+            }
+        }
+    }
+}

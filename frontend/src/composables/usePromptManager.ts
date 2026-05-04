@@ -1,10 +1,13 @@
 
 import { ref, watch, type Ref } from 'vue';
 import { cloneDeep } from 'lodash-es';
-import { useContentStore } from '../stores/content';
-import type { Frame } from '../types';
-import type { PromptObject, PromptSection, PromptField } from '../lib/prompt-templates';
-import { DETAILED_PROMPT_TEMPLATE } from '../lib/prompt-templates';
+import { Frame } from '../types';
+import { useFrameStore } from '../stores/frame_store';
+
+import type { PromptObject, PromptSection, PromptField } from '../types/prompt';
+import { FRAME_PROMPT_TEMPLATE } from '../libs/prompt_template/frame';
+
+// The new StoryNode is generic, so we define a local, more specific type for frames.
 
 // Type guards
 const isField = (item: any): item is PromptField => 'value' in item && 'placeholder' in item;
@@ -52,13 +55,13 @@ function cleanForSave(prompt: PromptObject): any {
 
 // The Composable function
 export function usePromptManager(activeFrame: Ref<Frame | null>) {
-    const contentStore = useContentStore();
+    const frameStore = useFrameStore();
     const editablePrompt = ref<PromptObject | null>(null);
 
     watch(activeFrame, (newFrame) => {
         if (newFrame) {
             const savedPrompt = newFrame.detailed_prompt || {};
-            editablePrompt.value = mergeWithTemplate(savedPrompt, DETAILED_PROMPT_TEMPLATE);
+            editablePrompt.value = mergeWithTemplate(savedPrompt, FRAME_PROMPT_TEMPLATE);
         } else {
             editablePrompt.value = null;
         }
@@ -73,7 +76,7 @@ export function usePromptManager(activeFrame: Ref<Frame | null>) {
             throw new Error('No active frame or prompt to save.');
         }
         const cleanedData = cleanForSave(editablePrompt.value);
-        await contentStore.updateFrame(activeFrame.value.id, { detailed_prompt: cleanedData });
+        await frameStore.updateFrame(activeFrame.value.id, { detailed_prompt: cleanedData });
     }
 
     return {

@@ -1,0 +1,189 @@
+{
+    "nodes": {
+        "S1": { "id": "S1", "type": "story", "title": "История о Рыцаре", "parentId": null, "childrenIds": ["A1", "A2", "BSA1", "A5"] },
+        "A1": { "id": "A1", "type": "arc", "title": "Вступление", "parentId": "S1", "childrenIds": [] },
+        "A2": { "id": "A2", "type": "arc", "title": "Поиск Камня", "parentId": "S1", "childrenIds": [] },
+        "BSA1": { "id": "BSA1", "type": "branchSet", "title": "Выбор пути (Арки)", "question": "Как герой решит пойти на поиски?", "parentId": "S1", "childrenIds": ["A3", "A4"] },
+        "A3": { "id": "A3", "type": "arc", "title": "Путь через горы", "branch_answer": "Пойти через горы", "parentId": "BSA1", "childrenIds": ["C1", "C2", "C3", "C4", "BSC4"] },
+        "A4": { "id": "A4", "type": "arc", "title": "Путь через болота", "branch_answer": "Оставить артефакт себе", "parentId": "BSA1", "childrenIds": [] },
+        "A5": { "id": "A5", "type": "arc", "title": "Прибытие в Цитадель", "parentId": "S1", "childrenIds": [] },
+        "C1": { "id": "C1", "type": "chapter", "title": "Начало пути", "parentId": "A3", "childrenIds": [] },
+        "C2": { "id": "C2", "type": "chapter", "title": "Горный перевал", "parentId": "A3", "childrenIds": [] },
+        "C3": { "id": "C3", "type": "chapter", "title": "Секреты прошлого (Параллельная глава)", "parentId": "A3", "childrenIds": [] },
+        "C4": { "id": "C4", "type": "chapter", "title": "Встреча с драконом", "parentId": "A3", "childrenIds": [] },
+        "BSC4": { "id": "BSC4", "type": "branchSet", "title": "Выбор тактики (Главы)", "parentId": "A3", "childrenIds": ["C5", "C6"] },
+        "C5": { "id": "C5", "type": "chapter", "title": "Битва", "parentId": "BSC4", "childrenIds": ["S5.1", "BSS5", "S5.C", "S5.D"] },
+        "C6": { "id": "C6", "type": "chapter", "title": "Переговоры", "parentId": "BSC4", "childrenIds": [] },
+        "S5.1": { 
+            "id": "S5.1", 
+            "type": "scene", 
+            "title": "Рыцарь точит меч",
+            "parentId": "C5",
+            "description": "Рыцарь готовится к битве в тускло освещенной кузнице. Камень скрежещет по стали, высекая искры. Он проверяет остроту лезвия большим пальцем. Его лицо полно решимости.", 
+            "childrenIds": ["F1", "F2", "F3", "F1", "F2", "F3"]
+        },
+        "BSS5": { "id": "BSS5", "type": "branchSet", "title": "Выбор действия (Сцены)", "parentId": "C5", "childrenIds": ["S5.A", "S5.B"] },
+        "S5.A": { "id": "S5.A", "type": "scene", "title": "Лобовая атака", "parentId": "BSS5", "childrenIds": [] },
+        "S5.B": { "id": "S5.B", "type": "scene", "title": "Засада у ручья", "parentId": "BSS5", "childrenIds": [] },
+        "S5.C": { "id": "S5.C", "type": "scene", "title": "Дракон повержен", "parentId": "C5", "childrenIds": [] },
+        "S5.D": { "id": "S5.D", "type": "scene", "title": "Находка в пещере", "parentId": "C5", "childrenIds": [] }
+    },
+
+    "horizontalSequences": {
+        "A1": {
+            "metadata": {
+                "type": "list",
+                "nextChoiceNode": "BSA1",
+                "previous_sequence": null 
+            },
+            "sequence": ["A1", "A2"]
+        },
+        "BSA1": {
+            "metadata": {
+                "type": "branch",
+                "choiceQuestion": "",
+                "main_branche": "A4"
+            },
+            "branches": {
+                "A3": {
+                    "sequence": ["A3", "A5"],
+                    "metadata": { 
+                        "isTerminal": true,
+                        "previous_sequence": "A1" 
+                    },
+                    "choice": ""
+                },
+                "A4": {
+                    "sequence": ["A4", "A5"],
+                    "metadata": { 
+                        "isTerminal": true,
+                        "previous_sequence": "A1" 
+                    },
+                    "choice": ""
+                }
+            }
+        },
+        "C1": {
+            "metadata": {
+                "type": "list",
+                "nextChoiceNode": "BSC4",
+                "previous_sequence": null 
+            },
+            "sequence": ["C1", "C2", "C4"]
+        },
+        "BSC4": {
+            "metadata": {
+                "type": "branch",
+                "choiceQuestion": "",
+                "main_branche": null
+            },      
+            "branches": {
+                "C5": {
+                    "sequence": ["C5"],
+                    "metadata": { 
+                        "isTerminal": true,
+                        "previous_sequence": "C1"  
+                    },
+                    "choice": ""
+                },
+                "C6": {
+                    "sequence": ["C6"],
+                    "metadata": { 
+                        "isTerminal": true,
+                        "previous_sequence": "C1" 
+                    },
+                    "choice": ""
+                }
+            }
+        },
+        "S5.1": {
+            "metadata": {
+                "type": "list",
+                "nextChoiceNode": "BSS5",
+                "previous_sequence": null 
+            },
+            "sequence": ["S5.1"]
+        },
+        "BSS5": {
+            "metadata": {
+                "type": "branch",
+                "choiceQuestion": "",
+                "main_branche": null
+            },
+            "branches": {
+                "S5.A": {
+                    "sequence": ["S5.A", "S5.C"],
+                    "metadata": { 
+                        "joinNode": "S5.D",
+                        "previous_sequence": "S5.1" 
+                    },
+                    "choice": ""
+                },
+                "S5.B": {
+                    "sequence": ["S5.B", "S5.C"],
+                    "metadata": { 
+                        "joinNode": "S5.D",
+                        "previous_sequence": "S5.1" 
+                    },
+                    "choice": ""
+                }
+            }
+        },
+        "S5.D": {
+            "metadata": {
+                "type": "list",
+                "isTerminal": true,
+                "previous_sequence": "BSS5" 
+            },
+            "sequence": ["S5.D"]
+        }
+    },
+    
+    "nodeToPathMap": {
+        "A1": { "choiceNodeId": "A1", "pathId": "A1" },
+        "A2": { "choiceNodeId": "A1", "pathId": "A1" },
+        "A3": { "choiceNodeId": "BSA1", "pathId": "A3" },
+        "A4": { "choiceNodeId": "BSA1", "pathId": "A4" },
+        "A5": { "choiceNodeId": "BSA1", "pathId": "A4" },
+        "C1": { "choiceNodeId": "C1", "pathId": "C1" },
+        "C2": { "choiceNodeId": "C1", "pathId": "C1" },
+        "C4": { "choiceNodeId": "C1", "pathId": "C1" },
+        "C5": { "choiceNodeId": "BSC4", "pathId": "C5" },
+        "C6": { "choiceNodeId": "BSC4", "pathId": "C6" },
+        "S5.1": { "choiceNodeId": "S5.1", "pathId": "S5.1" },
+        "S5.A": { "choiceNodeId": "BSS5", "pathId": "S5.A" },
+        "S5.B": { "choiceNodeId": "BSS5", "pathId": "S5.B" },
+        "S5.C": { "choiceNodeId": "BSS5", "pathId": "S5.A" },
+        "S5.D": { "choiceNodeId": "S5.D", "pathId": "S5.D" }
+    },
+
+    "frames": {
+        "F1": {
+            "id": "F1",
+            "type": "frame",
+            "title": "Крупный план: точильный камень",
+            "description": "Камень скрежещет по стали, высекая искры.",
+            "image_url": "https://i.pinimg.com/736x/f9/0b/e6/f90be67d0972abf131be7f34f9bb2601.jpg",
+            "detailed_prompt": {},
+            "source_text_range": { "start": 54, "end": 95 }
+        },
+        "F2": {
+            "id": "F2",
+            "type": "frame",
+            "title": "Проверка лезвия",
+            "description": "Он проверяет остроту лезвия большим пальцем.",
+            "image_url": "https://i.pinimg.com/1200x/c4/8e/f7/c48ef73fe134b34b1bd74f93c7ec2f9c.jpg",
+            "detailed_prompt": {},
+            "source_text_range": { "start": 96, "end": 140 }
+        },
+        "F3": {
+            "id": "F3",
+            "type": "frame",
+            "title": "Лицо рыцаря",
+            "description": "Его лицо полно решимости.",
+            "image_url": "https://i.pinimg.com/736x/94/76/a5/9476a559c218b2aa25e9cbdbd5299e57.jpg",
+            "detailed_prompt": {},
+            "source_text_range": { "start": 141, "end": 183 }
+        }
+    }
+}
