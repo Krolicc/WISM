@@ -1,19 +1,5 @@
 <template>
   <div class="flag-panel-container">
-    <!-- Absolutely positioned block for flags BEFORE the active one -->
-    <Transition name="slide-up">
-      <div v-if="isExpanded" class="flags-before">
-        <FlagButton
-          v-for="flag in flagsBefore"
-          :key="flag.id"
-          :flag="flag"
-          :is-active="false"
-          @click="selectFlag(flag.id)"
-        />
-      </div>
-    </Transition>
-
-    <!-- The always-visible active flag -->
     <FlagButton
       v-if="activeFlag"
       class="active-flag-button"
@@ -22,15 +8,14 @@
       @click="toggleExpand"
     />
 
-    <!-- Absolutely positioned block for flags AFTER the active one -->
-    <Transition name="slide-down">
-      <div v-if="isExpanded" class="flags-after">
+    <Transition name="slide-up">
+      <div v-if="isExpanded" class="flags">
         <FlagButton
-          v-for="flag in flagsAfter"
+          v-for="flag in Object.values(flags)"
           :key="flag.id"
           :flag="flag"
-          :is-active="false"
-          @click="selectFlag(flag.id)"
+          :is-inactive="activeFlag == flag"
+          @click.stop="selectFlag(flag.id)"
         />
       </div>
     </Transition>
@@ -38,23 +23,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { GENERATION_FLAGS as flags } from '../../lib/generation-flags';
+import { ref, watch, onUnmounted, PropType } from 'vue';
+import { useUIStateStore } from '../../stores/ui_state';
 import FlagButton from './FlagButton.vue';
+import type { ActionFlagsMap, ActionFlag } from '../../lib/action-meta'; 
 
-const props = defineProps<{ modelValue: string }>();
+const props = defineProps({ 
+  ownerId: {
+    type: String,
+    required: true,
+  },
+  activeFlag: Object as PropType<ActionFlag>,
+  flags: {
+    type: Object as PropType<ActionFlagsMap>,
+    required: true,
+  }
+});
 
 const emit = defineEmits<{
   (e: 'update:model-value', flagId: string): void, // Event to update the flag
 }>();
 
+const uiStateStore = useUIStateStore();
 const isExpanded = ref(false);
 
-const activeFlagIndex = computed(() => flags.findIndex(f => f.id === props.modelValue));
-const activeFlag = computed(() => flags[activeFlagIndex.value]);
+watch(isExpanded, (newValue) => {
+  if (newValue) {
+    uiStateStore.setExpandedFlagPanel(props.ownerId);
+  } else if (uiStateStore.expandedFlagPanelOwnerId === props.ownerId) {
+    uiStateStore.setExpandedFlagPanel(null);
+  }
+});
 
-const flagsBefore = computed(() => flags.slice(0, activeFlagIndex.value));
-const flagsAfter = computed(() => flags.slice(activeFlagIndex.value + 1));
+onUnmounted(() => {
+  if (uiStateStore.expandedFlagPanelOwnerId === props.ownerId) {
+    uiStateStore.setExpandedFlagPanel(null);
+  }
+});
 
 function selectFlag(flagId: string) {
   emit('update:model-value', flagId);
@@ -76,53 +81,27 @@ function toggleExpand() {
   --button-size: 40px;
 }
 
-.active-flag-button {
-  /* The active button is always visible and in the flow */
-}
-
-.flags-before,
-.flags-after {
+.flags {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   gap: var(--gap);
-  width: var(--button-size);
-  z-index: -1; /* Positioned behind the active button to not intercept clicks when hidden */
-}
-
-.flags-before {
-  /* Positioned above the active button */
-  bottom: calc(100% + var(--gap));
-  flex-direction: column; /* This is the key change: stack items upwards */
-}
-
-.flags-after {
-  /* Positioned below the active button */
+  z-index: -1; 
   top: calc(100% + var(--gap));
-  flex-direction: column;
+  right: 0
 }
-
-/* --- Transitions --- */
 
 .slide-up-enter-active,
-.slide-up-leave-active,
-.slide-down-enter-active,
-.slide-down-leave-active {
+.slide-up-leave-active {
   transition: all 0.2s ease-out;
 }
 
-/* SLIDE UP */
 .slide-up-enter-from,
 .slide-up-leave-to {
   opacity: 0;
-  transform: translateX(-50%) translateY(10px);
+  transform: translateY(10px);
 }
 
-/* SLIDE DOWN */
-.slide-down-enter-from,
-.slide-down-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-10px);
-}
 </style>

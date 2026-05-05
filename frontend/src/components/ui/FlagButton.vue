@@ -1,7 +1,7 @@
 <template>
   <button 
     class="flag-button"
-    :class="{ 'active': isActive }"
+    :class="{ 'active': isActive, 'inactive': isInactive }"
     v-tooltip-helper="flag.name"
   >
     <span v-html="flag.icon"></span>
@@ -13,7 +13,8 @@ import type { GenerationFlag } from '../../lib/generation-flags';
 
 defineProps<{ 
   flag: GenerationFlag,
-  isActive: boolean 
+  isActive: boolean,
+  isInactive: boolean,
 }>();
 </script>
 
@@ -43,6 +44,11 @@ defineProps<{
   background-color: var(--main-color);
   border-color: var(--main-color);
   color: white;
+}
+
+.flag-button.inactive {
+  opacity: .25;
+  pointer-events: none;
 }
 
 .flag-button span {

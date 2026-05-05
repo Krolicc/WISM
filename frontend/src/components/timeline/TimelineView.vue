@@ -1,116 +1,149 @@
 <template>
-  <div class="timeline-container list-container">
-    <!-- Top insertion area -->
-    <InsertionPoint
-      v-if="!getAction(0, 'generate')" 
-      :index="0"
-      @add="queueInsertion(0, undefined, navStore.currentItemList[0]?.id)"
-    />
-    <InsertionForm 
-      v-else
-      :action="getAction(0, 'generate')"
-      @remove="removeAction(0, 'generate')" 
-    />
+  <div class="timeline-container list-container"> 
+    <!-- <TimelineInsertion
+      :id=horizNavStore.currentTimeline[0]
+      :level="vertNavStore.viewingLevel"
+      :parentId=horizNavStore.currentTimeline[0].parent_id
+      :isBefore=false
+    /> -->
 
-    <div v-for="(item, index) in navStore.currentItemList" :key="item.id">
+    <div v-for="(item, id) in horizNavStore.currentTimeline" :key="id">
+      <TimelineBranch v-if="item.type == 'branchSet'" :item="item" />
       <TimelineItem 
-        :item="item"
-        :index="index" 
-        :active="item.id === activeItemId"
-        :is-selected="isActionQueuedForItem(item.id, 'regenerate')" 
-        :is-deleted="isActionQueuedForItem(item.id, 'delete')"
-        :is-interactive="isNodeInteractive(index)"
-        :flag="(getAction(index, 'regenerate') as RegenerateAction)?.params.flag"
-        @update:flag="(flagId) => updateFlag(index, flagId)"
-        @toggle-regenerate="toggleRegenerateAction(index, item.id)"
-        @toggle-delete="toggleDeleteAction(index, item.id)"
-        @select-item="selectItem"
+        v-else
+        @contextmenu.prevent="contextMenuHandle($event, item)"
+        :item="item" 
+        class="unselect"
+        @openContextMenu="contextMenuHandle($event, item)"
       />
 
-      <!-- Insertion area below item -->
       <InsertionPoint 
-        v-if="!getAction(index + 1, 'generate')" 
-        :index="index + 1" 
-        @add="queueInsertion(index + 1, item.id, navStore.currentItemList[index + 1]?.id)"
-        :active="false"
+        @add="handlePointAdd(item.id)"
       />
-      <!-- isLineActive(index) -->
-      <InsertionForm 
-        v-else 
-        :action="getAction(index + 1, 'generate')"
-        @remove="removeAction(index + 1, 'generate')"
-      />
+
+      <!-- <TimelineInsertion
+        :class="{ dimmed: uiStateStore.expandedFlagPanelOwnerId == item.id }"
+        :id="item.id"
+        :level="vertNavStore.viewingLevel"
+        :parentId="item.parent_id"
+        :isBefore=true
+      /> -->
     </div>
-    <div v-if="isLoading" class="spinner-message">
-      <!-- 🌀 {{ isProcessing ? 'Applying changes...' : 'Loading content...' }} -->
-    </div>
+
+    <!-- <div v-if="listData.isLoading" class="spinner-message">
+       🌀 Loading content...
+    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue';
-import { GenerateAction, RegenerateAction, useOrchestrationStore } from '../../stores/orchestration';
-import { useNavigationStore } from '../../stores/navigation';
+import { ref, computed } from 'vue';
+import { useHorizontalNavigationStore } from '../../stores/horizontal_navigation';
+import { useVerticalNavigationStore } from '../../stores/vertical_navigation';
+import { useOrchestrationManageStore } from '../../stores/orchestration_manage';
+import { useContextMenuStore, type ContextMenuItem } from '../../stores/context_menu';
+import { ACTION_META, getExpActions, ActionType } from '../../lib/action-meta';
+import { useUIStateStore } from '../../stores/ui_state';
+import TimelineBranch from './TimelineBranch.vue';
+import InsertionPoint from './InsertionPoint.vue';
+import TimelineItem from './TimelineItem.vue';
+import type { StoryNode } from '../../types';
 
 // --- Stores ---
-const navStore = useNavigationStore();
-const {
-  getAction,
-  queueInsertion,
-  removeAction,
-  isActionQueuedForItem,
-  isNodeInteractive,
-  toggleRegenerateAction,
-  toggleDeleteAction,
-  commitActions,
-} = useOrchestrationStore();
+const vertNavStore = useVerticalNavigationStore();
+const horizNavStore = useHorizontalNavigationStore();
+const orchManageStore = useOrchestrationManageStore();
+const contextMenuStore = useContextMenuStore();
+const uiStateStore = useUIStateStore();
 
-// --- Components ---
-const InsertionPoint = defineAsyncComponent(() => import('./InsertionPoint.vue'));
-const InsertionForm = defineAsyncComponent(() => import('./InsertionForm.vue'));
-const TimelineItem = defineAsyncComponent(() => import('./TimelineItem.vue'));
+// --- State ---
+const contextMenuItem = ref<StoryNode | null>(null);
 
-// --- Props & Emits ---
-const props = defineProps<{ 
-    activeItemId: string | null,
-    isLoading: boolean,
-}>();
 
-const emit = defineEmits<{(e: 'select', id: string): void}>();
-
-// --- Computed properties to link UI with the store ---
-
-// const isLineActive = (index: number) => { if (props.items.length < index + 2) return false; return isRegenerating(props.items[index]?.id) && isRegenerating(props.items[index + 1]?.id); };
-
-// --- Action Dispatchers (The UI now calls these functions) ---
-
-const updateFlag = (index: number, flagId: string) => {
-  const action = getAction(index, 'regenerate') as RegenerateAction
-  action.params.flag = flagId
+function handlePointAdd(id: string, isParent: boolean = false) {
+  orchManageStore.createManualNode(vertNavStore.viewingLevel, id, isParent);
 }
 
-const selectItem = (id: string) => {
-  emit('select', id);
-};
+function contextMenuHandle(event: MouseEvent, item: StoryNode) {
+  contextMenuItem.value = item;
+
+  showMenuFromButton(event);
+}
+
+const getContextMenuItems = computed((): ContextMenuItem[] => {
+  if (contextMenuItem.value == null) return []
+
+  const expActions = getExpActions();
+  return expActions.map(action => {
+    let actionCallback = () => console.log(`Action ${action.type} not implemented for ${contextMenuItem.value.id}`);
+    
+    // Here we map our specific action type to the store function
+    if (action.type === 'alternate_node') {
+      actionCallback = () => orchManageStore.createBranchFromNode(contextMenuItem.value.id);
+    }
+
+    return {
+      id: action.type,
+      text: action.meta.name,
+      action: actionCallback,
+      // disabled: item.someCondition // Future-proofing
+    };
+  });
+});
+
+const contextMenuConfig = computed(() => {
+  if (contextMenuItem.value?.type === 'branchSet') return []; 
+
+  return getContextMenuItems.value;
+});
+
+function showMenuFromButton(event: MouseEvent) {
+  const buttonElement = event.currentTarget as HTMLElement;
+  const rect = buttonElement.getBoundingClientRect();
+  contextMenuStore.open({
+    items: contextMenuConfig,
+    position: { x: rect.left, y: rect.bottom + 5 },
+    placement: 'bottom-start'
+  });
+}
 
 
-// --- The simplified, single-purpose generate function ---
+// --- Exposed generate function for parent ---
 async function generate() {
   try {
-    await commitActions();
-    // Optionally show a success toast
+    // Pass the story ID to the commitActions function
+    const storyId = vertNavStore.breadcrumbs.find(b => b.type === 'story')?.id;
+    if (storyId) {
+      // await commitActions(storyId);
+    } else {
+      console.error("Generation failed: Could not find story ID.");
+    }
   } catch (error) {
     console.error("Generation failed:", error);
-    // Optionally show an error toast
   }
 }
 
-// Expose the generate function to the parent component
 defineExpose({ generate });
 
 </script>
 
 <style scoped>
-.timeline-container { overflow-y: auto; flex-grow: 1; overflow-x: hidden; }
-.spinner-message { padding: 1rem; text-align: center; color: var(--sub-color); }
+.dimmed {
+  opacity: 0.05;
+}
+
+.timeline-container { 
+  overflow-y: auto; 
+  flex-grow: 1; 
+  overflow-x: hidden; 
+  padding: 0.5rem 1rem;
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
+}
+
+.spinner-message { 
+  padding: 1rem; 
+  text-align: center; 
+  color: var(--sub-color); 
+}
 </style>
